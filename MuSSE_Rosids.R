@@ -1,13 +1,16 @@
 #perform a MuSSE analysis for WGD events in Rosids
 library(diversitree)
+#due to changes in ape and how an ultrametric tree is determined, need to have ape version 3.5 installed
 library(ape)
 library(geiger)
 library(nlme)
 
 #starting files of the tree and the data file
+#the data file has two columns, one with the species name, the second with the character state starting at 1
 mydata <- read.csv("Rosids_only.csv",header=TRUE, row.names=1)
 mytree <- read.tree("Vascular_Plants_rooted.dated.tre")
 
+#compare data file and tree file to see if any taxa are not represented in both
 comparison <- name.check(phy=mytree,data=mydata)
 
 # prune taxa that don't have data but are present in the tree
@@ -22,8 +25,8 @@ comparison <- name.check(phy=mytree,data=mydata)
 states <- mydata[,1]
 names(states) <- row.names(mydata)
 
-#proportion of tips sampled.  Monocots species around 60,000
-sampling.f <- 9603 / 70000
+#proportion of tips sampled.  Rosids estimates from the Plant list database
+sampling.f <- 9603 / 86996
 sampling.f
 
 #make.musse needs two arguments, a tree and character states
@@ -40,57 +43,56 @@ argnames(lik.base)
 #heuristic guess as to sensible starting point
 p <- starting.point.musse(mytree,4)
 
-#full model
+#full model allowing all variables to change at any time
 fit <-find.mle(lik, p[argnames(lik)])
 fit
 save(fit, file="fit_10k.RData")
 save.image()
 
-
-#fit.base <- find.mle(lik.base, p[argnames(lik.base)])
-#fit.base
+#fit the base model constraining WGD to only change sequentially in either direction
+fit.base <- find.mle(lik.base, p[argnames(lik.base)])
+fit.base
 
 #round to three decimal places
-#round(coef(fit.base),3)
+round(coef(fit.base),3)
 
 #save(fit.base, file="fit.base.RData")
 #save.image()
 #load(file="fit.base.RData")
 
 #test hypothesis of speciation rates are different for different states
-#lik.lambda <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, lambda2 ~ lambda1, lambda3 ~ lambda1, lambda4 ~ lambda1)
+lik.lambda <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, lambda2 ~ lambda1, lambda3 ~ lambda1, lambda4 ~ lambda1)
 
 #then start search again
-#fit.lambda <- find.mle(lik.lambda, p[argnames(lik.lambda)])
-#fit.lambda
+fit.lambda <- find.mle(lik.lambda, p[argnames(lik.lambda)])
+fit.lambda
 
 #round to three decimal places
-#round(coef(fit.lambda),3)
+round(coef(fit.lambda),3)
 
 #save(fit.lambda, file="fit.lambda.RData")
 #save.image()
 
 
 #perform statistical test to get a p-value
-#anova(fit.base, free.lambda=fit.lambda)
-#anova
+anova(fit.base, free.lambda=fit.lambda)
+anova
 
 #then start search again
-#lik.mu <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, mu2 ~ mu1, mu3 ~ mu1, mu4 ~ mu1)
+lik.mu <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, mu2 ~ mu1, mu3 ~ mu1, mu4 ~ mu1)
 
 #then start search again
-#fit.mu <- find.mle(lik.mu, p[argnames(lik.mu)])
-#fit.mu
-
-#round(coef(fit.mu),3)
+fit.mu <- find.mle(lik.mu, p[argnames(lik.mu)])
+fit.mu
+round(coef(fit.mu),3)
 
 #save(fit.mu, file="fit.mu.RData")
 #save.image()
 
 
 #perform statistical test to get a p-value
-#anova(fit.base, free.lambda=fit.mu)
-#anova
+anova(fit.base, free.lambda=fit.mu)
+anova
 
 #mcmc analysis
 prior.exp <- make.prior.exponential(2)
