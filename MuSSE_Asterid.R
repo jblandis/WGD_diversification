@@ -1,5 +1,6 @@
 #perform a MuSSE analysis for WGD events in Asterids
 library(diversitree)
+#due to how ultrametric trees are determined in the new version of ape, make sure vers. 3.5 is installed
 library(ape)
 library(geiger)
 library(nlme)
