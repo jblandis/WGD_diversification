@@ -4,15 +4,10 @@ import random
 log_file = open("WGD_permutation_7percent.txt", "w")
 log_file
 
-#lst = []
-
-#for i in range(7860,15718):
-#	lst.append(i)
-
 #create a dictionary with all of the nodes that an upshift occurs
 keys = []
 values = []
-#open the file text file with nodes and shifts, and strip out new line information
+#open the file text file with nodes in column one and a 1 in column two to show shifts, and strip out new line information
 with open("Upshift_nodes.txt", "r") as f:
 	words = [word.strip() for word in f]
 # for each line in the file, the second column is added to keys, and the third column to the values variable
