@@ -15,7 +15,8 @@ startTime = datetime.now()
 #first create
 keys = []
 values = []
-#open the file  and strip out new line information
+#open a file of all genera of interest, in this case it is all the unique genera names from Zanne et al. 2014, originally had it so that there
+#are two columns that are unique, with "Genus" as the header in each
 with open("Unique_genera.txt", "r") as f:
 	words = [word.strip() for word in f]
 # for each line in the file, the second column is added to keys, and the third column to the values variable
@@ -38,6 +39,7 @@ for key,val in new_dict.items():
 	f = open(filePath, 'w')
 	f.close		
 
+#create a log file for species with "Accepted" as their status	
 accepted_entries = open("/Users/jacoblandis/Desktop/WGD_Diversification/Plant_List/Accepted_species.txt", "w")
 
 	
