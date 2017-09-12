@@ -1,14 +1,16 @@
 #perform a MuSSE analysis for WGD events in Asterids
 library(diversitree)
-#due to how ultrametric trees are determined in the new version of ape, make sure vers. 3.5 is installed
+#due to changes in ape and how an ultrametric tree is determined, need to have ape version 3.5 installed
 library(ape)
 library(geiger)
 library(nlme)
 
 #starting files of the tree and the data file
+#the data file has two columns, one with the species name, the second with the character state starting at 1
 mydata <- read.csv("Asterids_only.csv",header=TRUE, row.names=1)
 mytree <- read.tree("Vascular_Plants_rooted.dated.tre")
 
+#compare data file and tree file to see if any taxa are not represented in both
 comparison <- name.check(phy=mytree,data=mydata)
 
 # prune taxa that don't have data but are present in the tree
@@ -23,7 +25,7 @@ comparison <- name.check(phy=mytree,data=mydata)
 states <- mydata[,1]
 names(states) <- row.names(mydata)
 
-#proportion of tips sampled.  Asterid estimates from Plant List
+#proportion of tips sampled.  Asterid estimates from Plant List database
 sampling.f <- 9725 / 96899
 sampling.f
 
@@ -41,45 +43,47 @@ argnames(lik.base)
 p <- starting.point.musse(mytree,4)
 p
 
-#full model
+#full model allowing all variables to change at any time
 fit <-find.mle(lik, p[argnames(lik)])
+fit
+round(coef(fit),3)
 
-#fit.base <- find.mle(lik.base, p[argnames(lik.base)])
-#fit.base
+#fit the base model constraining WGD to only change sequentially in either direction
+fit.base <- find.mle(lik.base, p[argnames(lik.base)])
+fit.base
 
 #round to three decimal places
-#round(coef(fit.base),3)
+round(coef(fit.base),3)
 
 #save(fit.base, file="fit.base.RData")
 #save.image()
 #load(file="fit.base.RData")
 
 #test hypothesis of speciation rates are different for different states
-#lik.lambda <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, lambda2 ~ lambda1, lambda3 ~ lambda1, lambda4 ~ lambda1)
+lik.lambda <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, lambda2 ~ lambda1, lambda3 ~ lambda1, lambda4 ~ lambda1)
 
 #then start search again
-#fit.lambda <- find.mle(lik.lambda, p[argnames(lik.lambda)])
-#fit.lambda
+fit.lambda <- find.mle(lik.lambda, p[argnames(lik.lambda)])
+fit.lambda
 
 #round to three decimal places
-#round(coef(fit.lambda),3)
+round(coef(fit.lambda),3)
 
 #save(fit.lambda, file="fit.lambda.RData")
 #save.image()
 
 
 #perform statistical test to get a p-value
-#anova(fit.base, free.lambda=fit.lambda)
-#anova
+anova(fit.base, free.lambda=fit.lambda)
+anova
 
 #then start search again
-#lik.mu <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, mu2 ~ mu1, mu3 ~ mu1, mu4 ~ mu1)
+lik.mu <- constrain(lik, q13 ~ 0, q14 ~ 0, q24~ 0, q31~ 0, q41~ 0, q42~ 0, mu2 ~ mu1, mu3 ~ mu1, mu4 ~ mu1)
 
 #then start search again
-#fit.mu <- find.mle(lik.mu, p[argnames(lik.mu)])
-#fit.mu
-
-#round(coef(fit.mu),3)
+fit.mu <- find.mle(lik.mu, p[argnames(lik.mu)])
+fit.mu
+round(coef(fit.mu),3)
 
 #mcmc analysis
 prior.exp <- make.prior.exponential(10)
@@ -98,7 +102,6 @@ pdf("Speciation.pdf")
 col <- c("azure3","cornflowerblue", "coral3", "aquamarine4")
 profiles.plot(samples[c("lambda1", "lambda2", "lambda3", "lambda4")], col.line=col, las=1, 
 	xlab="Speciation rate", legend="topright", font=2, cex.lab=0.5, font.lab=1, cex.legend=1, margin=1/4)
-
 dev.off()
 
 #to visualize extinction rate
@@ -117,5 +120,4 @@ samples$net4 <- samples$lambda4 - samples$mu4
 col <- c("azure3","cornflowerblue", "coral3", "aquamarine4")
 profiles.plot(samples[c("net1", "net2", "net3", "net4")], col.line=col, las=1, 
 	xlab="Net diversification rate", legend="topright", font=2, cex.lab=0.5, font.lab=1, cex.legend=1, margin=1/4)
-
 dev.off()
